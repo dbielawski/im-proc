@@ -14,14 +14,18 @@ process(int rows, int cols, char* imd_name){
   
   pnm imd = pnm_new(cols, rows, PnmRawPpm);
 
+  // Met tout les pixels de l'images a blanc (0, 0, 0)
   unsigned short *p = pnm_get_image(imd);
   for(int j=0; j<cols; j++){
     for(int i=0; i<rows; i++){
       for(int k=0; k<3; k++){
-	*p++ = pnm_maxval;
+        *p++ = pnm_maxval;
       }
     }    
   }
+
+  // calcul pour laisser une bordure blanche en haut a droite en bas
+  // à gauche
   int j0 = cols/4;
   int j1 = 3*j0;
   int i0 = rows/4;
