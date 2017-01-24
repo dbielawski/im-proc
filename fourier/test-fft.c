@@ -21,8 +21,36 @@ static void
 test_for_backward(pnm ims, char* name)
 {
   fprintf(stderr, "test_for_backward: ");
-  (void)ims;
-  (void)name;
+
+  long int cols = pnm_get_width(ims);
+  long int rows = pnm_get_height(ims);
+  pnm imd = pnm_new(cols, rows, PnmRawPpm);
+
+  unsigned short* gray = malloc(sizeof(unsigned short) * cols * rows);
+
+  for (int i = 0; i < rows; ++i)
+    for (int j = 0; j < cols; ++j)
+      gray[i * cols + j] = pnm_get_component(ims, i, j, 0);
+
+  fftw_complex* freq_repr = forward(rows, cols, gray);
+  unsigned short* fb_gray = backward(rows , cols, freq_repr);
+
+  for (int i = 0; i < rows; ++i)
+    for (int j = 0; j < cols; ++j)
+    {
+      pnm_set_component(imd, i, j, 0, fb_gray[i * cols + j]);
+      pnm_set_component(imd, i, j, 1, fb_gray[i * cols + j]);
+      pnm_set_component(imd, i, j, 2, fb_gray[i * cols + j]);
+    }
+
+  char new_name[100];
+  strcat(new_name, "FB-");
+  strcat(new_name, name);
+  pnm_save(imd, PnmRawPpm, "new.ppm");
+  pnm_free(imd);
+  free(fb_gray);
+  free(gray);
+  fftw_free(freq_repr);
   fprintf(stderr, "OK\n");
 }
 
@@ -91,11 +119,12 @@ usage (char *s)
 
 int 
 main(int argc, char *argv[])
-{
+{  
   if (argc != 2)
     usage(argv[0]);
   pnm ims = pnm_load(argv[1]);
   run(ims, argv[1]);
+  pnm_free(ims);
 
   return EXIT_SUCCESS;
 }
