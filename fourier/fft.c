@@ -4,6 +4,14 @@
 
 #include "fft.h"
 
+void centrage(int rows, int cols, fftw_complex* img)
+{
+  for (int i = 0; i < rows; ++i)
+    for (int j = 0; j < cols; ++j)
+      if ((i + j) % 2 == 1)
+        img[i * cols + j] *= -1;
+}
+
 fftw_complex
 *forward(int rows, int cols, unsigned short* g_img)
 {
@@ -20,6 +28,8 @@ fftw_complex
   {
     in[i] = g_img[i];
   }
+
+  centrage(rows, cols, in);
 
   plan = fftw_plan_dft_2d(rows , cols, in, out, FFTW_FORWARD, FFTW_ESTIMATE);
   fftw_execute(plan);
@@ -45,6 +55,8 @@ unsigned short
     FFTW_ESTIMATE);
 
   fftw_execute(plan);
+
+  centrage(rows, cols, out);
 
   for (int i = 0; i < size; ++i)
   {
