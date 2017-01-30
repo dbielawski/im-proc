@@ -28,13 +28,13 @@ char* process_name(char* name)
   return name;
 }
 
-float find_max_amplitude(long int size, float* as)
+float find_max(long int size, float* buffer)
 {
   float max = 0.f;
   for (int i = 0; i < size; ++i)
   {
-    if (max < as[i])
-      max = as[i];
+    if (max < buffer[i])
+      max = buffer[i];
   }
   return max;
 }
@@ -53,7 +53,9 @@ void centrage(int rows, int cols, unsigned short* img)
 {
   long int size = rows * cols;
   for (int i = 0; i < size; ++i)
-    img[i] = img[i] * pow(-1, i);
+    // if (i % 2 == 1)
+    //   img[i] = img[i] * -1;
+      img[i] = img[i] * pow(-1, i);
 }
 
 /**
@@ -71,28 +73,27 @@ test_for_backward(pnm ims, char* name)
 
   unsigned short* gray = malloc(sizeof(unsigned short) * cols * rows);
 
-  for (int i = 0; i < rows; ++i)
-    for (int j = 0; j < cols; ++j)
-      gray[i * cols + j] = pnm_get_component(ims, i, j, 0);
+  pnm_get_channel(ims, gray, 0);
 
   fftw_complex* freq_repr = forward(rows, cols, gray);
+  free(gray);
   gray = backward(rows , cols, freq_repr);
 
   pnm imd = pnm_new(cols, rows, PnmRawPpm);
-  for (int i = 0; i < rows; ++i)
-    for (int j = 0; j < cols; ++j)
-    {
-      pnm_set_component(imd, i, j, 0, gray[i * cols + j]);
-      pnm_set_component(imd, i, j, 1, gray[i * cols + j]);
-      pnm_set_component(imd, i, j, 2, gray[i * cols + j]);
-    }
+
+  pnm_set_channel(imd, gray, 0);
+  pnm_set_channel(imd, gray, 1);
+  pnm_set_channel(imd, gray, 2);
 
   char new_name[100] = "FB-";
-  strcat(new_name, process_name(name));
+  char* extracted_name = process_name(name);
+  strcat(new_name, extracted_name);
   pnm_save(imd, PnmRawPpm, new_name);
-  pnm_free(imd);
+
   free(gray);
   fftw_free(freq_repr);
+  free(extracted_name);
+  pnm_free(imd);
 
   fprintf(stderr, "OK\n");
 }
@@ -117,9 +118,7 @@ test_reconstruction(pnm ims, char* name)
   float *ps = (float*)malloc(rows * cols * sizeof(float));
 
   unsigned short *gray = malloc(rows * cols * sizeof(unsigned short));
-  for (int i = 0; i < rows; ++i)
-    for (int j = 0; j < cols; ++j)
-      gray[i * cols + j] = pnm_get_component(ims, i, j, 0);
+  pnm_get_channel(ims, gray, 0);
 
   fftw_complex *freq_repr = forward(rows, cols, gray);
   freq2spectra(rows, cols, freq_repr, as, ps);
@@ -127,22 +126,20 @@ test_reconstruction(pnm ims, char* name)
   unsigned short* m_gray = backward(rows , cols, freq_repr);
 
   pnm imd = pnm_new(cols, rows, PnmRawPpm);
-  for (int i = 0; i < rows; ++i)
-    for (int j = 0; j < cols; ++j)
-    {
-      pnm_set_component(imd, i, j, 0, m_gray[i * cols + j]);
-      pnm_set_component(imd, i, j, 1, m_gray[i * cols + j]);
-      pnm_set_component(imd, i, j, 2, m_gray[i * cols + j]);
-    }
+  pnm_set_channel(imd, m_gray, 0);
+  pnm_set_channel(imd, m_gray, 1);
+  pnm_set_channel(imd, m_gray, 2);
 
   free(as);
   free(ps);
   fftw_free(freq_repr);
   free(gray);
   char new_name[100] = "FB-ASPS-";
-  strcat(new_name, process_name(name));
+  char* extracted_name = process_name(name);
+  strcat(new_name, extracted_name);
   pnm_save(imd, PnmRawPpm, new_name);
   pnm_free(imd);
+  free(extracted_name);
 
   fprintf(stderr, "OK\n");
 }
@@ -167,11 +164,9 @@ test_display(pnm ims, char* name)
   float *ps = (float*)malloc(rows * cols * sizeof(float));
 
   unsigned short *gray = malloc(rows * cols * sizeof(unsigned short));
-  for (int i = 0; i < rows; ++i)
-    for (int j = 0; j < cols; ++j)
-      gray[i * cols + j] = pnm_get_component(ims, i, j, 0);
+  pnm_get_channel(ims, gray, 0);
 
-  centrage(rows, cols, gray);
+  // centrage(rows, cols, gray);
   fftw_complex *freq_repr = forward(rows, cols, gray);
   freq2spectra(rows, cols, freq_repr, as, ps);
 
@@ -179,23 +174,31 @@ test_display(pnm ims, char* name)
   pnm imd_ps = pnm_new(cols, rows, PnmRawPpm);  
 
   float k = 0.1f;
-  float as_max = find_max_amplitude(rows * cols, as);
+  float as_max = find_max(rows * cols, as);
+
+  unsigned short* img_as = malloc(rows * cols *sizeof(unsigned short));
+  unsigned short* img_ps = malloc(rows * cols *sizeof(unsigned short));
 
   for (int i = 0; i < rows; ++i)
     for (int j = 0; j < cols; ++j)
     {
-      pnm_set_component(imd_as, i, j, 0,
-        clamp(pow(as[i * cols + j] / as_max, k) * 255.f, 0, pnm_maxval));
-      pnm_set_component(imd_as, i, j, 1,
-        clamp(pow(as[i * cols + j] / as_max, k) * 255.f, 1, pnm_maxval));
-      pnm_set_component(imd_as, i, j, 2,
-        clamp(pow(as[i * cols + j] / as_max, k) * 255.f, 2, pnm_maxval));
+      img_as[i * cols + j] =
+      clamp(pow(as[i * cols + j] / as_max, k) * 255.f, 0, pnm_maxval);
 
-      pnm_set_component(imd_ps, i, j, 0, ps[i * cols + j]);
-      pnm_set_component(imd_ps, i, j, 1, ps[i * cols + j]);
-      pnm_set_component(imd_ps, i, j, 2, ps[i * cols + j]);
+      img_ps[i * cols + j] =
+      clamp(ps[i * cols + j], 0, pnm_maxval);
     }
 
+  // centrage(rows, cols, img_as);
+  // centrage(rows, cols, img_ps);
+
+  pnm_set_channel(imd_as, img_as, 0);
+  pnm_set_channel(imd_as, img_as, 1);
+  pnm_set_channel(imd_as, img_as, 2);
+
+  pnm_set_channel(imd_ps, img_ps, 0);
+  pnm_set_channel(imd_ps, img_ps, 1);
+  pnm_set_channel(imd_ps, img_ps, 2);
 
   free(as);
   free(ps);
@@ -203,15 +206,21 @@ test_display(pnm ims, char* name)
   free(gray);
 
   char new_as[50] = "AS-";
-  strcat(new_as, process_name(name));
+  char* extracted_name = process_name(name);
+  strcat(new_as, extracted_name);
   pnm_save(imd_as, PnmRawPpm, new_as);
+  free(extracted_name);
     
   char new_ps[50] = "PS-";
-  strcat(new_ps, process_name(name));
+  extracted_name = process_name(name);
+  strcat(new_ps, extracted_name);
   pnm_save(imd_ps, PnmRawPpm, new_ps);
+  free(extracted_name);
 
   pnm_free(imd_as);
   pnm_free(imd_ps);
+  free(img_as);
+  free(img_ps);
 
   fprintf(stderr, "OK\n");
 }
