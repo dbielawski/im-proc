@@ -32,7 +32,7 @@ char* process_name(char* name)
 
 float find_max(long int size, float* buffer)
 {
-  float max = 0.f;
+  float max = buffer[0];
   for (int i = 0; i < size; ++i)
   {
     if (max < buffer[i])
@@ -125,6 +125,7 @@ test_reconstruction(pnm ims, char* name)
   free(ps);
   fftw_free(freq_repr);
   free(gray);
+  free(m_gray);
   char new_name[100] = "FB-ASPS-";
   char* extracted_name = process_name(name);
   strcat(new_name, extracted_name);
@@ -221,9 +222,6 @@ test_modification(pnm ims, char* name)
 {
   fprintf(stderr, "test_modification: ");
 
-  (void)ims;
-  (void)name;
-
   long int cols = pnm_get_width(ims);
   long int rows = pnm_get_height(ims);
 
@@ -240,16 +238,17 @@ test_modification(pnm ims, char* name)
   freq2spectra(rows, cols, freq_repr, as, ps);
   
   float as_max = find_max(rows * cols, as);
-  float new_amp = as_max * .25f;
+  float new_amp = as_max * 0.25f;
 
   int mid_i = rows / 2;
   int mid_j = cols / 2;
+  int freq = 8;
   // horizontale
-  as[cols * mid_i + mid_j - 8] = new_amp;
-  as[cols * mid_i + mid_j + 8] = new_amp;
+  as[cols * mid_i + mid_j - freq] = new_amp;
+  as[cols * mid_i + mid_j + freq] = new_amp;
   // verticale
-  as[cols * (mid_i - 8) + mid_j] = new_amp;
-  as[cols * (mid_i + 8) + mid_j] = new_amp;
+  as[cols * (mid_i - freq) + mid_j] = new_amp;
+  as[cols * (mid_i + freq) + mid_j] = new_amp;
 
   spectra2freq(rows, cols, as, ps, freq_repr);  
   unsigned short* img_freq = backward(rows, cols, freq_repr);
