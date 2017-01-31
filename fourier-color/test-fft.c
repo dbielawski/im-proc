@@ -347,30 +347,36 @@ test_modification(pnm ims, char* name)
   int mid_i = rows / 2;
   int mid_j = cols / 2;
 
+  // ROUGE
   // horizontale
   as_r[cols * mid_i + mid_j - 8] = new_amp_r;
   as_r[cols * mid_i + mid_j + 8] = new_amp_r;
   // verticale
   as_r[cols * (mid_i - 8) + mid_j] = new_amp_r;
   as_r[cols * (mid_i + 8) + mid_j] = new_amp_r;
+  // FIN ROUGE
 
+  // VERT
   // horizontale
-  as_r[cols * mid_i + mid_j - 8] = new_amp_v;
-  as_r[cols * mid_i + mid_j + 8] = new_amp_v;
+  as_v[cols * mid_i + mid_j - 8] = new_amp_v;
+  as_v[cols * mid_i + mid_j + 8] = new_amp_v;
   // verticale
-  as_r[cols * (mid_i - 8) + mid_j] = new_amp_v;
-  as_r[cols * (mid_i + 8) + mid_j] = new_amp_v;
+  as_v[cols * (mid_i - 8) + mid_j] = new_amp_v;
+  as_v[cols * (mid_i + 8) + mid_j] = new_amp_v;
+  // FIN VERT
 
+  // BLEU
   // horizontale
-  as_r[cols * mid_i + mid_j - 8] = new_amp_b;
-  as_r[cols * mid_i + mid_j + 8] = new_amp_b;
+  as_b[cols * mid_i + mid_j - 8] = new_amp_b;
+  as_b[cols * mid_i + mid_j + 8] = new_amp_b;
   // verticale
-  as_r[cols * (mid_i - 8) + mid_j] = new_amp_b;
-  as_r[cols * (mid_i + 8) + mid_j] = new_amp_b;
+  as_b[cols * (mid_i - 8) + mid_j] = new_amp_b;
+  as_b[cols * (mid_i + 8) + mid_j] = new_amp_b;
+  // FIN BLEU
 
   spectra2freq(rows, cols, as_r, ps_r, freq_repr_r);
-  spectra2freq(rows, cols, as_v, ps_v, freq_repr_b);
-  spectra2freq(rows, cols, as_b, ps_b, freq_repr_v);
+  spectra2freq(rows, cols, as_v, ps_v, freq_repr_v);
+  spectra2freq(rows, cols, as_b, ps_b, freq_repr_b);
   unsigned short* img_freq_r = backward(rows, cols, freq_repr_r);
   unsigned short* img_freq_v = backward(rows, cols, freq_repr_v);
   unsigned short* img_freq_b = backward(rows, cols, freq_repr_b);

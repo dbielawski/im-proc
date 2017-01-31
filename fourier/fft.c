@@ -61,7 +61,14 @@ unsigned short
   for (int i = 0; i < size; ++i)
   {
     double real = creal(out[i]);
-    image[i] = (unsigned short)(real / size);
+    real = (real / size);
+
+    double v = real;
+    if (real > 255)
+      v = 255;
+    else if (real < 0)
+      v = 0;
+    image[i] = (unsigned short)v;
   }
 
   fftw_destroy_plan(plan);

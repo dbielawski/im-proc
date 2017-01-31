@@ -257,11 +257,13 @@ test_modification(pnm ims, char* name)
 
   float k = 0.15f;
   as_max = find_max(rows * cols, as);
+
   for (int i = 0; i < rows; ++i)
     for (int j = 0; j < cols; ++j)
     {
-      img_as[i * cols + j] =
-      clamp(pow(as[i * cols + j] / as_max, k) * 255.f, 0, pnm_maxval);
+      float a = as[i * cols + j] / (as_max * 1.f);
+      float p = pow(a, k) * 255.f;
+      img_as[i * cols + j] = clamp(p, 0, pnm_maxval);
     }
 
   pnm_set_channel(imd_freq, img_freq, 0);
