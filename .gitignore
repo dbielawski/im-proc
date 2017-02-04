@@ -5,5 +5,5 @@
 *.a
 *.out
 *.save
-Makefile
+!Makefile
 *.ppm
