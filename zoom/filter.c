@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 
 #include "fft.h"
 
@@ -55,8 +56,8 @@ double mitch(double x)
 
 double process_filter(char* filter_name, double x)
 {
-	double h= 0.f;
-	if (strcmp("filter_name", "box") == 0)
+	double h = 0.f;
+	if (strcmp(filter_name, "box") == 0)
 		h = box(x);
 	else if (strcmp(filter_name, "tent") == 0)
 		h = tent(x);
@@ -84,9 +85,46 @@ void filter(int factor, char* filter_name, pnm ims, char* imd_name)
 
 	pnm_get_channel(ims, gray, 0);
 
-	for (int i = 0; i < new_rows; ++i)
-		for (int j = 0; j < new_cols; ++j)
-			gray_copy[i * new_cols + j] = gray[(i / factor) * cols + j / factor];
+
+	// Interpolation horizontale
+	// for (int i = 0; i < new_rows; ++i)
+	// 	for (int j = 0; j < new_cols; ++j)
+	// 		gray_copy[i * new_cols + j] = gray[(i / factor) * cols + j / factor];
+	for (int jP = 0; jP < new_cols * new_rows; ++jP)
+	{
+		int i = jP / new_cols;
+		int j = jP / factor;
+
+		int WF = 0;
+		int left = j - WF;
+		int right = j + WF;
+
+		float s = 0.f;
+
+		for (int k = left; k <= right; ++k)
+		{
+			s = s + gray[i * cols + k] * process_filter(filter_name, k - j);
+		}
+
+		gray_copy[i * new_cols + jP] = s;
+	}
+
+	// Interpolation verticale
+	// for (int jP = 0; jP < new_cols * new_rows; ++jP)
+	// {
+	// 	int i = jP / new_cols;
+	// 	int j = jP / factor;
+	// 	int left = j - WF;
+	// 	int right = j + WF;
+	// 	float s = 0.f;
+
+	// 	for (int k = left; k <= right; ++k)
+	// 	{
+	// 		s = s + gray[i * cols + k] * process_filter(filter_name, k - j);
+	// 	}
+
+	// 	gray_copy[i * new_cols + jP] = s;
+	// }
 
 	pnm imd = pnm_new(new_cols, new_rows, PnmRawPpm);
 	pnm_set_channel(imd, gray_copy, 0);
