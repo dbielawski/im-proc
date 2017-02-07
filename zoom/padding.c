@@ -37,6 +37,7 @@ void padding(int factor, pnm ims, char* imd_name)
 				(j >= (mid_new_rows - mid_rows)) &&
 				(j < (mid_new_rows + mid_rows)))
 			{
+				// TODO: pas beau
 				padding_comp[i * new_cols + j] = *gray_comp++;
 			}
 			else

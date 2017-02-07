@@ -63,7 +63,6 @@ unsigned short
   {
     double real = creal(out[i]);
     real = (real / normalizeFactor);
-    (void)factor;
 
     double v = real;
     if (real > 255)

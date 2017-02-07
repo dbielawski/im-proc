@@ -68,6 +68,39 @@ double process_filter(char* filter_name, double x)
 	return h;
 }
 
+
+float support_filter(char* filter_name)
+{
+	float WF = 0.f;
+
+	if (strcmp(filter_name, "box") == 0)
+		WF = 0.5f;
+	else if (strcmp(filter_name, "tent") == 0)
+		WF = 1.0f;
+	else if (strcmp(filter_name, "bell") == 0)
+		WF = 0.5f;
+	else if (strcmp(filter_name, "mitch") == 0)
+		WF = 2.f;
+	return WF;
+}
+
+void expension()
+{
+
+}
+
+unsigned short* flip(unsigned short* buffer, int rows, int cols)
+{
+	int size = rows * cols;
+	unsigned short* flipped_buffer = malloc(size * sizeof(unsigned short));
+
+	for (int i = 0; i < rows; ++i)
+		for (int j = 0; j < cols; ++j)
+			flipped_buffer[i * cols + j] = buffer[j * rows + i];
+
+	return flipped_buffer;
+}
+
 void filter(int factor, char* filter_name, pnm ims, char* imd_name)
 {
 	fprintf(stderr, "filter: ");
@@ -85,11 +118,9 @@ void filter(int factor, char* filter_name, pnm ims, char* imd_name)
 
 	pnm_get_channel(ims, gray, 0);
 
+	float WF = support_filter(filter_name);
 
-	// Interpolation horizontale
-	// for (int i = 0; i < new_rows; ++i)
-	// 	for (int j = 0; j < new_cols; ++j)
-	// 		gray_copy[i * new_cols + j] = gray[(i / factor) * cols + j / factor];
+	// Interpolation cols
 	for (int jP = 0; jP < new_cols * new_rows; ++jP)
 	{
 		int i = jP / new_cols;
@@ -108,23 +139,27 @@ void filter(int factor, char* filter_name, pnm ims, char* imd_name)
 
 		gray_copy[i * new_cols + jP] = s;
 	}
+	unsigned short* new = flip(gray_copy, rows, cols);
 
-	// Interpolation verticale
-	// for (int jP = 0; jP < new_cols * new_rows; ++jP)
-	// {
-	// 	int i = jP / new_cols;
-	// 	int j = jP / factor;
-	// 	int left = j - WF;
-	// 	int right = j + WF;
-	// 	float s = 0.f;
+	// Interpolation rows
+	for (int iP = 0; iP < new_cols * new_rows; ++iP)
+	{
+		int i = iP / new_cols;
+		int j = iP / factor;
 
-	// 	for (int k = left; k <= right; ++k)
-	// 	{
-	// 		s = s + gray[i * cols + k] * process_filter(filter_name, k - j);
-	// 	}
+		int WF = 0;
+		int left = j - WF;
+		int right = j + WF;
 
-	// 	gray_copy[i * new_cols + jP] = s;
-	// }
+		float s = 0.f;
+
+		for (int k = left; k <= right; ++k)
+		{
+			s = s + gray[i * cols + k] * process_filter(filter_name, k - j);
+		}
+
+		gray_copy[i * new_cols + iP] = s;
+	}
 
 	pnm imd = pnm_new(new_cols, new_rows, PnmRawPpm);
 	pnm_set_channel(imd, gray_copy, 0);
