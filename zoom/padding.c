@@ -38,13 +38,11 @@ void padding(int factor, pnm ims, char* imd_name)
 				(j < (mid_new_rows + mid_rows)))
 			{
 				// TODO: pas beau
-				padding_comp[i * new_cols + j] = *gray_comp++;
+				padding_comp[i * new_cols + j] = gray_comp[ (i - (mid_new_rows - mid_rows)) * cols + (j - (mid_new_cols - mid_cols))];
 			}
 			else
 				padding_comp[i * new_cols + j] = 0;
 		}
-
-	gray_comp -= cols * rows;
 
 	unsigned short* gray_padding = backward(new_rows, new_cols, padding_comp, factor);
 	

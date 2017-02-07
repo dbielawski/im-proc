@@ -5,19 +5,19 @@
 #include "fft.h"
 
 
-double box(double x)
+float box(float x)
 {
-	double h = 0.f;
-	if  (x >= .5f && x < .5f)
+	float h = 0.f;
+	if  (x >= -.5f && x < .5f)
 		h = 1.f;
 
 	return h;
 }
 
-double tent(double x)
+float tent(float x)
 {
-	double h = 0.f;
-	double abs_x = fabs(x);
+	float h = 0.f;
+	float abs_x = fabs(x);
 
 	if  (x >= -1.f && x <= 1.f)
 		h = 1.f - abs_x;
@@ -25,10 +25,10 @@ double tent(double x)
 	return h;
 }
 
-double bell(double x)
+float bell(float x)
 {
-	double h = 0.f;
-	double abs_x = fabs(x);
+	float h = 0.f;
+	float abs_x = fabs(x);
 
 	if  (abs_x <= .5f)
 		h = -x * x + 3.f / 4.f;
@@ -38,25 +38,26 @@ double bell(double x)
 	return h;
 }
 
-double mitch(double x)
+// TODO: fix mitch
+float mitch(float x)
 {
-	double h = 0.f;
-	double abs_x = fabs(x);
+	float h = 0.f;
+	float abs_x = fabs(x);
 
 	if  (x >= 1.f && x <= 1.f)
-		h = 7.f / 6.f * (abs_x) * (abs_x) * (abs_x) - 2 * x * x + 8.f / 9.f;
+		h = 7.f / 6.f * (abs_x) * (abs_x) * (abs_x) - 2.f * x * x + 8.f / 9.f;
 	else if ((x >= -2.f && x <= -1.f) || (x >= 1.f && x <= 2.f))
 		h = -7.f / 18.f * (abs_x) * (abs_x) * (abs_x)
-			+ 2 * x * x - 
+			+ 2.f * x * x - 
 			10.f / 3.f * abs_x +
 			16.f / 9.f;
 
 	return h;
 }
 
-double process_filter(char* filter_name, double x)
+float process_filter(char* filter_name, float x)
 {
-	double h = 0.f;
+	float h = 0.f;
 	if (strcmp(filter_name, "box") == 0)
 		h = box(x);
 	else if (strcmp(filter_name, "tent") == 0)
@@ -68,7 +69,6 @@ double process_filter(char* filter_name, double x)
 	return h;
 }
 
-
 float support_filter(char* filter_name)
 {
 	float WF = 0.f;
@@ -78,18 +78,42 @@ float support_filter(char* filter_name)
 	else if (strcmp(filter_name, "tent") == 0)
 		WF = 1.0f;
 	else if (strcmp(filter_name, "bell") == 0)
-		WF = 0.5f;
+		WF = 1.5f;
 	else if (strcmp(filter_name, "mitch") == 0)
 		WF = 2.f;
 	return WF;
 }
 
-void expension()
+void expension(unsigned short* in, int cols_in, int rows_in,
+	unsigned short* out, int cols_out, int rows_out, char* filter_name, int factor)
 {
+	for (int i = 0; i < rows_in; ++i)
+		for (int jP = 0; jP < cols_out; ++jP)
+		{
+			float j = jP / (factor * 1.f);
+			float WF = support_filter(filter_name);
+			int left = j - WF;
+			int right = j + WF;
 
+			float s = 0.f;
+
+			for (int k = left; k <= right; ++k)
+			{
+				float h = process_filter(filter_name, k - j);
+				int col = k;
+
+		        if (col < 0)
+		        	col = 0;
+		        else if (k >= cols_in)
+		        	col = cols_in - 1;
+
+	        	s += in[i * cols_in + col] * h;
+			}
+			out[i * cols_out + jP] = (unsigned short)s;
+		}
 }
 
-unsigned short* flip(unsigned short* buffer, int rows, int cols)
+unsigned short* flip(unsigned short* buffer, int cols, int rows)
 {
 	int size = rows * cols;
 	unsigned short* flipped_buffer = malloc(size * sizeof(unsigned short));
@@ -109,57 +133,66 @@ void filter(int factor, char* filter_name, pnm ims, char* imd_name)
 	int rows = pnm_get_height(ims);
 
 	int new_cols = cols * factor;
-	int new_rows = rows * factor;
+	int new_rows = rows * factor;	
 
-	unsigned short *gray =
-		malloc(sizeof(unsigned short) * cols * rows);
-	unsigned short *gray_copy =
-		malloc(sizeof(unsigned short) * new_cols * new_rows);
+	unsigned short* gray = pnm_get_channel(ims, NULL, 0);
+	unsigned short* gray_copy_w = malloc(sizeof(unsigned) * new_cols * rows);
+	unsigned short* gray_copy = malloc(sizeof(unsigned) * new_cols * new_rows);
 
-	pnm_get_channel(ims, gray, 0);
+	// expension(gray, cols, rows,	gray_copy_w, new_cols, rows, filter_name, factor);
+	// flip(gray_copy_w, new_cols, rows);
+	// expension(gray_copy_w, new_cols, rows,	gray_copy, new_cols, new_rows, filter_name, factor);
+	// flip(gray_copy, new_cols, new_rows);
 
 	float WF = support_filter(filter_name);
 
-	// Interpolation cols
-	for (int jP = 0; jP < new_cols * new_rows; ++jP)
-	{
-		int i = jP / new_cols;
-		int j = jP / factor;
-
-		int WF = 0;
-		int left = j - WF;
-		int right = j + WF;
-
-		float s = 0.f;
-
-		for (int k = left; k <= right; ++k)
+	for (int i = 0; i < rows; ++i)
+		for (int jP = 0; jP < new_cols; ++jP)
 		{
-			s = s + gray[i * cols + k] * process_filter(filter_name, k - j);
+			float j = jP / (factor * 1.f);
+			int left = j - WF;
+			int right = j + WF;
+
+			float s = 0.f;
+
+			for (int k = left; k <= right; ++k)
+			{
+				float h = process_filter(filter_name, k - j);
+				int col = k;
+
+		        if (col < 0)
+		        	col = 0;
+		        else if (k >= cols)
+		        	col = cols - 1;
+
+	        	s += gray[i * cols + col] * h;
+			}
+			gray_copy_w[i * new_cols + jP] = (unsigned short)s;
 		}
 
-		gray_copy[i * new_cols + jP] = s;
-	}
-	unsigned short* new = flip(gray_copy, rows, cols);
-
-	// Interpolation rows
-	for (int iP = 0; iP < new_cols * new_rows; ++iP)
-	{
-		int i = iP / new_cols;
-		int j = iP / factor;
-
-		int WF = 0;
-		int left = j - WF;
-		int right = j + WF;
-
-		float s = 0.f;
-
-		for (int k = left; k <= right; ++k)
+	for (int iP = 0; iP < new_rows; ++iP)
+		for (int j = 0; j < new_cols; ++j)
 		{
-			s = s + gray[i * cols + k] * process_filter(filter_name, k - j);
-		}
+			float i = iP / (factor * 1.f);
+			int above = i - WF;
+			int below = i + WF;
 
-		gray_copy[i * new_cols + iP] = s;
-	}
+			float s = 0.f;
+
+			for (int k = above; k <= below; ++k)
+			{
+				float h = process_filter(filter_name, k - i);
+				int row = k;
+
+				if (k < 0)
+					row = 0;
+		        else if (k >= rows)
+		        	row = rows - 1;
+
+	        	s += gray_copy_w[row * new_cols + j] * h;
+			}
+			gray_copy[iP * new_cols + j] = (unsigned short)s;
+		}
 
 	pnm imd = pnm_new(new_cols, new_rows, PnmRawPpm);
 	pnm_set_channel(imd, gray_copy, 0);
@@ -171,6 +204,7 @@ void filter(int factor, char* filter_name, pnm ims, char* imd_name)
 	pnm_free(ims);
 	free(gray);
 	free(gray_copy);
+	free(gray_copy_w);
 
 	fprintf(stderr, "OK\n");
 }
