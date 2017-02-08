@@ -44,10 +44,10 @@ float mitch(float x)
 	float h = 0.f;
 	float abs_x = fabs(x);
 
-	if  (x >= 1.f && x <= 1.f)
-		h = 7.f / 6.f * (abs_x) * (abs_x) * (abs_x) - 2.f * x * x + 8.f / 9.f;
+	if  (x >= -1.f && x <= 1.f)
+		h = 7.f / 6.f * ((abs_x) * (abs_x) * (abs_x)) - 2.f * x * x + 8.f / 9.f;
 	else if ((x >= -2.f && x <= -1.f) || (x >= 1.f && x <= 2.f))
-		h = -7.f / 18.f * (abs_x) * (abs_x) * (abs_x)
+		h = -7.f / 18.f * ((abs_x) * (abs_x) * (abs_x))
 			+ 2.f * x * x - 
 			10.f / 3.f * abs_x +
 			16.f / 9.f;
