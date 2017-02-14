@@ -91,10 +91,11 @@ int clamp(int value, int min, int max)
 		return min;
 	if (value > max)
 		return max;
+	return 0;
 }
 
 void expension(unsigned short* in, int cols_in, int rows_in,
-	unsigned short* out, int cols_out, int rows_out, char* filter_name, int factor)
+	unsigned short* out, int cols_out, char* filter_name, int factor)
 {
 	float WF = support_filter(filter_name);
 
@@ -129,9 +130,9 @@ unsigned short* flip(unsigned short* buffer, int cols, int rows)
 	int size = rows * cols;
 	unsigned short* flipped_buffer = malloc(size * sizeof(unsigned short));
 
-	for (int i = 0; i < rows; ++i)
-		for (int j = 0; j < cols; ++j)
-			flipped_buffer[i * cols + j] = buffer[j * cols + i];
+	for (int i = 0; i < cols; ++i)
+		for (int j = 0; j < rows; ++j)
+			flipped_buffer[i * rows + j] = buffer[j * cols + i];
 
 	return flipped_buffer;
 }
@@ -149,59 +150,13 @@ void filter(int factor, char* filter_name, pnm ims, char* imd_name)
 	unsigned short* gray = pnm_get_channel(ims, NULL, 0);
 	unsigned short* gray_copy_w = malloc(sizeof(unsigned) * new_cols * rows);
 
-	float WF = support_filter(filter_name);
+	expension(gray, cols, rows, gray_copy_w, new_cols, filter_name, factor);
+	unsigned short* gray_copy_w_flipped = flip(gray_copy_w, new_cols, rows);
 
-	for (int i = 0; i < rows; ++i)
-		for (int jP = 0; jP < new_cols; ++jP)
-		{
-			float j = jP / (factor * 1.f);
-			int left = j - WF;
-			int right = j + WF;
-
-			float s = 0.f;
-
-			for (int k = left; k <= right; ++k)
-			{
-				float h = process_filter(filter_name, k - j);
-				int col = k;
-
-		        if (col < 0)
-		        	col = 0;
-		        else if (k >= cols)
-		        	col = cols - 1;
-
-	        	s += gray[i * cols + col] * h;
-			}
-			s = clamp(s, 0, 255);
-			gray_copy_w[i * new_cols + jP] = (unsigned short)s;
-		}
-
-	unsigned short* gray_copy = malloc(new_cols * new_rows * sizeof(unsigned short));
-	for (int iP = 0; iP < new_rows; ++iP)
-		for (int j = 0; j < new_cols; ++j)
-		{
-			float i = iP / (factor * 1.f);
-			int above = i - WF;
-			int below = i + WF;
-
-			float s = 0.f;
-
-			for (int k = above; k <= below; ++k)
-			{
-				float h = process_filter(filter_name, k - i);
-				int row = k;
-
-				if (k < 0)
-					row = 0;
-		        else if (k >= rows)
-		        	row = rows - 1;
-
-	        	s += gray_copy_w[row * new_cols + j] * h;
-			}
-			s = clamp(s, 0, 255);
-			gray_copy[iP * new_cols + j] = (unsigned short)s;
-		}
-
+	unsigned short* gray_copy_flipped = malloc(sizeof(unsigned) * new_cols * new_rows);
+	expension(gray_copy_w_flipped, cols, new_rows, gray_copy_flipped, new_cols, filter_name, factor);
+	unsigned short* gray_copy = flip(gray_copy_flipped, new_cols, new_rows);
+	
 	pnm imd = pnm_new(new_cols, new_rows, PnmRawPpm);
 	pnm_set_channel(imd, gray_copy, 0);
 	pnm_set_channel(imd, gray_copy, 1);
@@ -213,6 +168,8 @@ void filter(int factor, char* filter_name, pnm ims, char* imd_name)
 	free(gray);
 	free(gray_copy);
 	free(gray_copy_w);
+	free(gray_copy_w_flipped);
+	free(gray_copy_flipped);
 
 	fprintf(stderr, "OK\n");
 }
