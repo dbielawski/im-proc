@@ -28,7 +28,6 @@ static float RGB2LMS[D][D] = {
 // };
 
 
-// // Chemin inverse
 // static float LAB2LMS[D][D] = {
 //   {0.0000, 0.0000, 0.0000}, 
 //   {0.0000, 0.0000, 0.0000},  
@@ -55,32 +54,26 @@ float* rgb2lms(unsigned short* RGB, int cols, int rows)
 {
   float* LMS = malloc(sizeof(float) * cols * rows * 3);
 
-  for (int i = 0; i < rows; ++i)
+  for (int i = 0; i < rows * 3; ++i)
   {
-    for (int j = 0; j < cols; ++j)
+    for (int j = 0; j < cols * 3; ++j)
     {
-      LMS[i * cols + j + 0] += 0.f;
-      LMS[i * cols + j + 1] += 0.f;
-      LMS[i * cols + j + 2] += 0.f;
-
       for (int k = 0; k < 3; ++k)
       {
+        float tmp = 0.f;
+
         for (int l = 0; l < 3; ++l)
         {
-          LMS[i * cols + j + 0] += RGB2LMS[k][l] * RGB[i * cols + j + 0];
-          LMS[i * cols + j + 1] += RGB2LMS[k][l] * RGB[i * cols + j + 1];
-          LMS[i * cols + j + 2] += RGB2LMS[k][l] * RGB[i * cols + j + 2];          
+          tmp += RGB2LMS[k][l] * RGB[i * cols + j + l];
         }
+
+        if (tmp >= 1)
+          tmp = log10(tmp);
+        else if (LMS[i * cols + j + k] < 1)
+          tmp = 0;
+
+        LMS[i * cols + j + k] = tmp;
       }
-
-      if (LMS[i * cols + j + 0] >= 1)
-        LMS[i * cols + j + 0] = log10(LMS[i * cols + j + 0]);
-
-      if (LMS[i * cols + j + 1] >= 1)
-        LMS[i * cols + j + 1] = log10(LMS[i * cols + j + 1]);
-
-      if (LMS[i * cols + j + 2] >= 1)
-        LMS[i * cols + j + 2] = log10(LMS[i * cols + j + 2]);
     }
   }
   return LMS;
@@ -88,59 +81,51 @@ float* rgb2lms(unsigned short* RGB, int cols, int rows)
 
 unsigned short* lms2rgb(float* LMS, int cols, int rows)
 {
-  float* RGB = malloc(sizeof(float) * cols * rows * 3);
+  unsigned short* RGB = malloc(sizeof(unsigned short) * cols * rows * 3);
 
-  for (int i = 0; i < rows; ++i)
+  for (int i = 0; i < rows * 3; ++i)
   {
-    for (int j = 0; j < cols; ++j)
+    for (int j = 0; j < cols * 3; ++j)
     {
-      RGB[i * cols + j + 0] += 0.f;
-      RGB[i * cols + j + 1] += 0.f;
-      RGB[i * cols + j + 2] += 0.f;
-
       for (int k = 0; k < 3; ++k)
       {
+        float tmp = 0.f;
+
         for (int l = 0; l < 3; ++l)
         {
-          RGB[i * cols + j + 0] += LMS2RGB[k][l] * LMS[i * cols + j + 0];
-          RGB[i * cols + j + 1] += LMS2RGB[k][l] * LMS[i * cols + j + 1];
-          RGB[i * cols + j + 2] += LMS2RGB[k][l] * LMS[i * cols + j + 2];          
+          tmp += LMS2RGB[k][l] * LMS[i * cols + j + l];
         }
+
+        RGB[i * cols + j + k] = clamp(0, 255, (unsigned short)tmp);
       }
     } 
   }
-
-  unsigned short* RGB_I = malloc(sizeof(unsigned short) * cols * rows * 3);
-  for (int i = 0; i < rows; ++i)
-  {
-    for (int j = 0; j < cols; ++j)
-    {
-      // RGB_I[i * cols + j + 0] = clamp(0, 255, RGB[i * cols + j + 0]);
-      // RGB_I[i * cols + j + 1] = clamp(0, 255, RGB[i * cols + j + 1]);
-      // RGB_I[i * cols + j + 2] = clamp(0, 255, RGB[i * cols + j + 2]);
-
-      RGB_I[i * cols + j + 0] = 0;
-      RGB_I[i * cols + j + 1] = 0;
-      RGB_I[i * cols + j + 2] = 0;
-    } 
-  }
-  free(RGB);
-  return RGB_I;
+  return RGB;
 }
 
-static void process(char *ims, char *imt, char* imd){
+static void process(char *ims, char *imt, char* imd)
+{
+  fprintf(stderr, "color-transfert: ");
 
-  pnm ims_ = pnm_load(ims);
-  unsigned short* buffer = pnm_get_image(ims_);
-  float* lms = rgb2lms(buffer, pnm_get_width(ims_), pnm_get_height(ims_));
-  unsigned short* rgb = lms2rgb(lms, pnm_get_width(ims_), pnm_get_height(ims_));
-  buffer = rgb;
+  pnm im_out = pnm_load(ims);
+  int cols = pnm_get_width(im_out);
+  int rows = pnm_get_height(im_out);
 
+  unsigned short* buffer = pnm_get_image(im_out);
+  float* lms = rgb2lms(buffer, cols, rows);
+  unsigned short* rgb = lms2rgb(lms, cols, rows);
 
-  pnm_save(ims_, PnmRawPpm, "a.ppm");
+  for (int i = 0; i < rows * 3; ++i)
+    for (int j = 0; j < cols * 3; ++j)
+      for (int k = 0; k < 3; ++k)
+        buffer[i * cols + j + k] = rgb[i * cols + j + k];
+
+  pnm_save(im_out, PnmRawPpm, imd);
   (void) ims;
   (void) imt;
   (void) imd;
+
+  fprintf(stderr, "OK\n");
 }
 
 void usage (char *s){
