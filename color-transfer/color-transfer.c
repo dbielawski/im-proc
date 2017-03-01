@@ -43,20 +43,21 @@ static float LMS2RGB[D][D] = {
 
 int clamp(int min, int max, int value)
 {
+  int x = value;
   if (value < min)
-    return min;
-  if (value > max)
-    return max;
-  return value;
+    x = min;
+  else if (value > max)
+    x = max;
+  return x;
 }
 
-float* rgb2lms(unsigned short* RGB, int cols, int rows)
+float* rgb2lms(unsigned short* buffer, int cols, int rows)
 {
   float* LMS = malloc(sizeof(float) * cols * rows * 3);
 
-  for (int i = 0; i < rows * 3; ++i)
+  for (int i = 0; i < rows; ++i)
   {
-    for (int j = 0; j < cols * 3; ++j)
+    for (int j = 0; j < cols; ++j)
     {
       for (int k = 0; k < 3; ++k)
       {
@@ -64,15 +65,15 @@ float* rgb2lms(unsigned short* RGB, int cols, int rows)
 
         for (int l = 0; l < 3; ++l)
         {
-          tmp += RGB2LMS[k][l] * RGB[i * cols + j + l];
+          tmp += RGB2LMS[k][l] * buffer[i * (3 * cols) + (3 * j) + l];
         }
 
-        if (tmp >= 1)
+        if (tmp >= 1.f)
           tmp = log10(tmp);
-        else if (LMS[i * cols + j + k] < 1)
-          tmp = 0;
+        else if (tmp < 1.f)
+          tmp = 0.f;
 
-        LMS[i * cols + j + k] = tmp;
+        LMS[i * (3 * cols) + (3 * j) + k] = tmp;
       }
     }
   }
@@ -83,9 +84,9 @@ unsigned short* lms2rgb(float* LMS, int cols, int rows)
 {
   unsigned short* RGB = malloc(sizeof(unsigned short) * cols * rows * 3);
 
-  for (int i = 0; i < rows * 3; ++i)
+  for (int i = 0; i < rows; ++i)
   {
-    for (int j = 0; j < cols * 3; ++j)
+    for (int j = 0; j < cols; ++j)
     {
       for (int k = 0; k < 3; ++k)
       {
@@ -93,10 +94,11 @@ unsigned short* lms2rgb(float* LMS, int cols, int rows)
 
         for (int l = 0; l < 3; ++l)
         {
-          tmp += LMS2RGB[k][l] * LMS[i * cols + j + l];
+          tmp += LMS2RGB[k][l] * LMS[i * (3 * cols) + (3 * j) + l];
         }
+        tmp = pow(10, tmp);
 
-        RGB[i * cols + j + k] = clamp(0, 255, (unsigned short)tmp);
+        RGB[i * (3 * cols) + (3 * j) + k] = clamp(0, 255, (unsigned short)tmp);
       }
     } 
   }
@@ -115,16 +117,16 @@ static void process(char *ims, char *imt, char* imd)
   float* lms = rgb2lms(buffer, cols, rows);
   unsigned short* rgb = lms2rgb(lms, cols, rows);
 
-  for (int i = 0; i < rows * 3; ++i)
-    for (int j = 0; j < cols * 3; ++j)
+  for (int i = 0; i < rows; ++i)
+    for (int j = 0; j < cols; ++j)
       for (int k = 0; k < 3; ++k)
-        buffer[i * cols + j + k] = rgb[i * cols + j + k];
+        buffer[i * (3 * cols) + (3 * j) + k] = rgb[i * (3 * cols) + (3 * j) + k];
 
   pnm_save(im_out, PnmRawPpm, imd);
-  (void) ims;
-  (void) imt;
-  (void) imd;
 
+  free(lms);
+  free(rgb);
+  pnm_free(im_out);
   fprintf(stderr, "OK\n");
 }
 
