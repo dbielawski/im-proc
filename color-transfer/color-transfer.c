@@ -89,8 +89,6 @@ static float* lms2lab(float* LMS, int cols, int rows)
           tmp += LMS2LAB[k][l] * LMS[i * 3 * cols + (3 * j) + l];
 
         LAB[i * 3 * cols + (3 * j) + k] = tmp;
-        // LAB[i * 3 * cols + (3 * j) + k] =
-        //   (unsigned short)clamp(0, 255, (unsigned short)tmp);
       }
 
   return LAB;
@@ -112,9 +110,6 @@ static float* lab2lms(float* LAB, int cols, int rows)
         tmp = pow(10, tmp);
 
         LMS[i * 3 * cols + (3 * j) + k] = tmp;
-
-        // LMS[i * 3 * cols + (3 * j) + k] =
-        //   (unsigned short)clamp(0, 255, (unsigned short)tmp);
       }
 
   return LMS;
@@ -153,7 +148,7 @@ static float* means(float* lab, int cols, int rows)
         means[k] += lab[i * 3 * cols + (3 * j) + k];
 
   for (int i = 0; i < 3; ++i)
-    means[i] /= cols * rows;
+    means[i] /= (1.f * (cols * rows));
 
   return means;
 }
@@ -169,8 +164,8 @@ static float* standardDeviations(float* means, float* lab, int cols, int rows)
     for (int j = 0; j < cols; ++j)
       for (int k = 0; k < 3; k++)
       {
-        deviations[k] += lab[i * cols * 3 + j * 3 + k] - means[k] *
-                        lab[i * cols * 3 + j * 3 + k] - means[k];
+        deviations[k] += (lab[i * cols * 3 + j * 3 + k] - means[k]) *
+                        (lab[i * cols * 3 + j * 3 + k] - means[k]);
       }
 
   for (int i = 0; i < 3; ++i)
@@ -188,6 +183,7 @@ static float* transfer(float* deviation_s, float* deviation_t, float* lab_t, flo
       for (int k = 0; k < 3; ++k)
       {
         lab_d[i * cols * 3 + j * 3 + k] = lab_t[i * cols * 3 + j * 3 + k] - means_t[k];
+
         lab_d[i * cols * 3 + j * 3 + k] *= deviation_s[k] / deviation_t[k];
 
         lab_d[i * cols * 3 + j * 3 + k] += means_s[k];
