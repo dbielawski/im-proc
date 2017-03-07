@@ -37,7 +37,7 @@ static float LAB2LMS[D][D] = {
 static float LMS2RGB[D][D] = {
   {4.4679, -3.5873, 0.1193}, 
   {-1.2186, 2.3809, -0.1624},  
-  {0.0497, -0.2439, 1.2045}
+  {0.0497, -0.2439, 1.2045} 
 };
 
 
@@ -174,7 +174,7 @@ static float* standardDeviations(float* means, float* lab, int cols, int rows)
   return deviations;
 }
 
-static float* transfer(float* deviation_s, float* deviation_t, float* lab_t, float* means_s, float* means_t, int cols, int rows)
+static float* transfer(float* deviation_s, float* deviation_t, float* lab_s, float* lab_t, float* means_s, float* means_t, int cols, int rows)
 {
   float* lab_d = malloc(sizeof(unsigned short) * cols * rows * 3);
 
@@ -184,7 +184,7 @@ static float* transfer(float* deviation_s, float* deviation_t, float* lab_t, flo
       {
         lab_d[i * cols * 3 + j * 3 + k] = lab_t[i * cols * 3 + j * 3 + k] - means_t[k];
 
-        lab_d[i * cols * 3 + j * 3 + k] *= deviation_s[k] / deviation_t[k];
+        lab_d[i * cols * 3 + j * 3 + k] *= (deviation_s[k] / deviation_t[k]);
 
         lab_d[i * cols * 3 + j * 3 + k] += means_s[k];
       }
@@ -227,7 +227,7 @@ static void process(char *ims, char *imt, char* imd)
   float* deviation_t = standardDeviations(means_t, lab_t, cols, rows);
 
   // Transfer
-  float* lab_d = transfer(deviation_s, deviation_t, lab_t, means_s, means_t, cols, rows);
+  float* lab_d = transfer(deviation_s, deviation_t, lab_s, lab_t, means_s, means_t, cols, rows);
 
   float* lms_d = lab2lms(lab_d, cols, rows);
   unsigned short* rgb = lms2rgb(lms_d, cols, rows);
