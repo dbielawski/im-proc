@@ -174,7 +174,7 @@ static float* standardDeviations(float* means, float* lab, int cols, int rows)
   return deviations;
 }
 
-static float* transfer(float* deviation_s, float* deviation_t, float* lab_s, float* lab_t, float* means_s, float* means_t, int cols, int rows)
+static float* transfer(float* deviation_s, float* deviation_t, float* lab_t, float* means_s, float* means_t, int cols, int rows)
 {
   float* lab_d = malloc(sizeof(unsigned short) * cols * rows * 3);
 
@@ -227,7 +227,7 @@ static void process(char *ims, char *imt, char* imd)
   float* deviation_t = standardDeviations(means_t, lab_t, cols, rows);
 
   // Transfer
-  float* lab_d = transfer(deviation_s, deviation_t, lab_s, lab_t, means_s, means_t, cols, rows);
+  float* lab_d = transfer(deviation_s, deviation_t, lab_t, means_s, means_t, cols, rows);
 
   float* lms_d = lab2lms(lab_d, cols, rows);
   unsigned short* rgb = lms2rgb(lms_d, cols, rows);
