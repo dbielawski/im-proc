@@ -22,9 +22,8 @@ void square(pnm img, int size)
 }
 
 // FIXME:
-void diamond(pnm img, int hs)
+void diamond(pnm img, int hs, int size)
 {
-  int size = 2 * hs + 1;
   unsigned short* pixels = malloc(sizeof(unsigned short) * size * size);
 
   for (int i = 0; i < size; ++i)
@@ -70,9 +69,8 @@ void diamond(pnm img, int hs)
   set_all_channels(img, pixels);
 }
 
-void disk(pnm img, int hs)
+void disk(pnm img, int hs, int size)
 {
-  int size = 2 * hs + 1;
   unsigned short* pixels = malloc(sizeof(unsigned short) * size * size);
 
   for (int i = 0; i < size; ++i)
@@ -89,9 +87,8 @@ void disk(pnm img, int hs)
   set_all_channels(img, pixels);
 }
 
-void line_v(pnm img, int hs)
+void line_v(pnm img, int hs, int size)
 {
-  int size = 2 * hs + 1;
   unsigned short* pixels = malloc(sizeof(unsigned short) * size * size);
 
   for (int i = 0; i < size; ++i)
@@ -104,9 +101,8 @@ void line_v(pnm img, int hs)
   set_all_channels(img, pixels);
 }
 
-void diag_r(pnm img, int hs)
+void diag_r(pnm img, int size)
 {
-  int size = 2 * hs + 1;
   unsigned short* pixels = malloc(sizeof(unsigned short) * size * size);
 
   for (int i = 0; i < size; ++i)
@@ -119,9 +115,8 @@ void diag_r(pnm img, int hs)
   set_all_channels(img, pixels);
 }
 
-void line_h(pnm img, int hs)
+void line_h(pnm img, int hs, int size)
 {
-  int size = 2 * hs + 1;
   unsigned short* pixels = malloc(sizeof(unsigned short) * size * size);
 
   for (int i = 0; i < size; ++i)
@@ -134,9 +129,8 @@ void line_h(pnm img, int hs)
   set_all_channels(img, pixels);
 }
 
-void diag_l(pnm img, int hs)
+void diag_l(pnm img, int size)
 {
-  int size = 2 * hs + 1;
   unsigned short* pixels = malloc(sizeof(unsigned short) * size * size);
 
   for (int i = 0; i < size; ++i)
@@ -149,9 +143,8 @@ void diag_l(pnm img, int hs)
   set_all_channels(img, pixels);
 }
 
-void cross(pnm img, int hs)
+void cross(pnm img, int size)
 {
-  int size = 2 * hs + 1;
   unsigned short* pixels = malloc(sizeof(unsigned short) * size * size);
 
   for (int i = 0; i < size; ++i)
@@ -168,9 +161,8 @@ void cross(pnm img, int hs)
   set_all_channels(img, pixels);
 }
 
-void plus(pnm img, int hs)
+void plus(pnm img, int hs, int size)
 {
-  int size = 2 * hs + 1;
   unsigned short* pixels = malloc(sizeof(unsigned short) * size * size);
 
   for (int i = 0; i < size; ++i)
@@ -189,27 +181,28 @@ void plus(pnm img, int hs)
 
 pnm
 se(int s, int hs){
-  int size = 2 * hs + 1;
+  int size = (2 * hs + 1) * (2 * hs + 1);
+  hs = size / 2;
   pnm out = pnm_new(size, size, PnmRawPpm);
 
   if (s == 0)
     square(out, size);
   else if (s == 1)
-    diamond(out, hs);
+    diamond(out, hs, size);
   else if (s == 2)
-    disk(out, hs);
+    disk(out, hs, size);
   else if (s == 3)
-    line_v(out, hs);
+    line_v(out, hs, size);
   else if (s == 4)
-    diag_r(out, hs);
+    diag_r(out, size);
   else if (s == 5)
-    line_h(out, hs);
+    line_h(out, hs, size);
   else if (s == 6)
-    diag_l(out, hs);
+    diag_l(out, size);
   else if (s == 7)
-    cross(out, hs);
+    cross(out, size);
   else if (s == 8)
-    plus(out, hs);
+    plus(out, hs, size);
   else
     out = NULL;
 
@@ -218,14 +211,14 @@ se(int s, int hs){
 
 void 
 lesser(unsigned short val, unsigned short* min){ 
-  (void) val;
-  (void) min;
+  if (*min > val)
+    *min = val;
 }
 
 void 
 greater(unsigned short val, unsigned short* max){ 
-  (void) val;
-  (void) max;
+  if (*max < val)
+    *max = val;
 }
 
 void 
@@ -234,7 +227,31 @@ process(int s,
 	pnm ims, 
 	pnm imd, 
 	void (*pf)(unsigned short, unsigned short*))
-{  
+{
+  pnm struct_elem = se(s, hs);
+
+  if (struct_elem == NULL)
+  {
+    printf("ERROR: structing element shape is null\n");
+    exit(-1);
+  }
+
+  int size = (2 * hs + 1) * (2 * hs + 1);
+  int height = pnm_get_height(ims);
+  int width = pnm_get_width(ims);
+
+  unsigned short* input_image = pnm_get_image(ims);
+  unsigned short* dest_image = pnm_get_image(imd);
+  (void) size;
+  (void) input_image;
+  (void) dest_image;
+
+  for (int i = 0; i < height; ++i)
+    for (int j = 0; j < width; ++j)
+    {
+
+    }
+
   (void) s;
   (void) hs;
   (void) ims;
