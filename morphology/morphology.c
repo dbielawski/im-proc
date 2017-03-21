@@ -2,7 +2,7 @@
 
 #include "morphology.h"
 
-//enum {SQUARE, DIAMOND, DISK, LINE_V, DIAG_R, LINE_H, DIAG_L, CROSS, PLUS};
+enum {SQUARE, DIAMOND, DISK, LINE_V, DIAG_R, LINE_H, DIAG_L, CROSS, PLUS};
 
 void set_all_channels(pnm im, unsigned short* buffer)
 {
@@ -29,43 +29,14 @@ void diamond(pnm img, int hs, int size)
   for (int i = 0; i < size; ++i)
     for (int j = 0; j < size; ++j)
     {
-      // en haut a gauche
-      if (i <= hs && j <= hs)
-      {
-        if (j >= hs - i)
-          pixels[i * size + j] = 255;
-        else
-          pixels[i * size + j] = 0;
-      }
+      int distance = abs(j - hs) + abs(i - hs);
 
-      // en bas a gauche
-      if (i >= hs && j <= hs)
-      {
-        if (hs - j <  2 * hs - i)
-          pixels[i * size + j] = 255;
-        else
-          pixels[i * size + j] = 0;
-      }
-
-      // en haut a droite
-      if (i < hs && j > hs)
-      {
-        if (2 * hs - j >= hs - i)
-          pixels[i * size + j] = 255;
-        else
-          pixels[i * size + j] = 0;
-      }
-
-      // en bas a droite
-      if (i >= hs && j > hs)
-      {
-        if (i >= hs)
-          pixels[i * size + j] = 255;
-        else
-          pixels[i * size + j] = 0;
-      }
+      if (distance < hs)
+        pixels[i * size + j] = 255;
+      else
+        pixels[i * size + j] = 0;
     }
-
+  
   set_all_channels(img, pixels);
 }
 
@@ -76,7 +47,7 @@ void disk(pnm img, int hs, int size)
   for (int i = 0; i < size; ++i)
     for (int j = 0; j < size; ++j)
     {
-      int distance = sqrt((i - hs) * (i - hs) + (j - hs) * (j - hs));
+      float distance = sqrt((i - hs) * (i - hs) + (j - hs) * (j - hs));
       
       if (distance <= hs)
         pixels[i * size + j] = 255;
@@ -185,23 +156,23 @@ se(int s, int hs){
   hs = size / 2;
   pnm out = pnm_new(size, size, PnmRawPpm);
 
-  if (s == 0)
+  if (s == SQUARE)
     square(out, size);
-  else if (s == 1)
+  else if (s == DIAMOND)
     diamond(out, hs, size);
-  else if (s == 2)
+  else if (s == DISK)
     disk(out, hs, size);
-  else if (s == 3)
+  else if (s == LINE_V)
     line_v(out, hs, size);
-  else if (s == 4)
+  else if (s == DIAG_R)
     diag_r(out, size);
-  else if (s == 5)
+  else if (s == LINE_H)
     line_h(out, hs, size);
-  else if (s == 6)
+  else if (s == DIAG_L)
     diag_l(out, size);
-  else if (s == 7)
+  else if (s == CROSS)
     cross(out, size);
-  else if (s == 8)
+  else if (s == PLUS)
     plus(out, hs, size);
   else
     out = NULL;
@@ -232,7 +203,7 @@ process(int s,
 
   if (struct_elem == NULL)
   {
-    printf("ERROR: structing element shape is null\n");
+    printf("ERROR: structing element is null\n");
     exit(-1);
   }
 

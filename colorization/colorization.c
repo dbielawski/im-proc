@@ -221,6 +221,7 @@ static void process(char *ims, char *imt, char* imd)
   float* lab_s = lms2lab(lms_s, cols_s, rows_s);
   float* lab_t = lms2lab(lms_t, cols_t, rows_t);
 
+
   float* means_s = means(lab_s, cols_s, rows_s);
   float* means_t = means(lab_t, cols_t, rows_t);
 
@@ -255,7 +256,7 @@ static void process(char *ims, char *imt, char* imd)
 }
 
 void usage (char *s){
-  fprintf(stderr, "Usage: %s <ims> <imt> <imd> \n", s);
+  fprintf(stderr, "Usage: %s<ims> <imt> <imd> \n", s);
   exit(EXIT_FAILURE);
 }
 
@@ -263,6 +264,7 @@ void usage (char *s){
 int main(int argc, char *argv[]){
   if (argc != param+1) 
     usage(argv[0]);
+
   process(argv[1], argv[2], argv[3]);
   return EXIT_SUCCESS;
 }
