@@ -229,8 +229,8 @@ process(int s,
           if (st_image[k * size + l] == 255)
           {
             // Pourquoi - et pas + ?
-            int new_i = i - hs + k;
-            int new_j = j - hs + l;
+            int new_i = i + k - hs;
+            int new_j = j + l - hs;
 
             if (new_i >= 0 && new_i < width && new_j >= 0 && new_j < height)
               pf(input_image[new_i * width + new_j], &value);

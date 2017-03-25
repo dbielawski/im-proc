@@ -6,9 +6,10 @@ LDFLAGS=-L$(ROOT)/lib
 LDLIBS=-lm -lbcl
 
 OBJ=morphology.o dilation.o erosion.o opening.o closing.o add.o subtract.o\
-	binarize.o
+	binarize.o labeling-color.o
 
 BIN=\
+	labeling-color\
 	binarize\
 	add\
 	subtract\
