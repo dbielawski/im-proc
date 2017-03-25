@@ -195,10 +195,11 @@ greater(unsigned short val, unsigned short* max){
 void 
 process(int s, 
 	int hs, 
-	pnm ims, 
-	pnm imd, 
+	pnm ims, // input image
+	pnm imd, // output image
 	void (*pf)(unsigned short, unsigned short*))
 {
+  fprintf(stderr, "process: ");
   pnm struct_elem = se(s, hs);
 
   if (struct_elem == NULL)
@@ -208,24 +209,41 @@ process(int s,
   }
 
   int size = (2 * hs + 1) * (2 * hs + 1);
+  hs = size / 2;
   int height = pnm_get_height(ims);
   int width = pnm_get_width(ims);
 
-  unsigned short* input_image = pnm_get_image(ims);
-  unsigned short* dest_image = pnm_get_image(imd);
-  (void) size;
-  (void) input_image;
-  (void) dest_image;
+  unsigned short* input_image = pnm_get_channel(ims, NULL, 0);
+  unsigned short* out_image = malloc(sizeof(unsigned short) * width * height);
+  unsigned short* st_image = pnm_get_channel(struct_elem, NULL, 0);
 
   for (int i = 0; i < height; ++i)
     for (int j = 0; j < width; ++j)
     {
+      unsigned short value = input_image[i * width + j];
 
+      for (int k = 0; k < size; ++k)
+      {
+        for (int l = 0; l < size; ++l)
+        {
+          if (st_image[k * size + l] == 255)
+          {
+            // Pourquoi - et pas + ?
+            int new_i = i - hs + k;
+            int new_j = j - hs + l;
+
+            if (new_i >= 0 && new_i < width && new_j >= 0 && new_j < height)
+              pf(input_image[new_i * width + new_j], &value);
+          }
+        }
+      }
+
+      out_image[i * width + j] = value;
     }
 
-  (void) s;
-  (void) hs;
-  (void) ims;
-  (void) imd;
-  (void) pf;
+  set_all_channels(imd, out_image);
+  
+  free(out_image);
+  free(st_image);
+  fprintf(stderr, "OK\n");
 }
