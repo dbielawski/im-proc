@@ -152,7 +152,7 @@ void plus(pnm img, int hs, int size)
 
 pnm
 se(int s, int hs){
-  int size = (2 * hs + 1) * (2 * hs + 1);
+  int size = (2 * hs + 1);
   hs = size / 2;
   pnm out = pnm_new(size, size, PnmRawPpm);
 
@@ -208,8 +208,7 @@ process(int s,
     exit(-1);
   }
 
-  int size = (2 * hs + 1) * (2 * hs + 1);
-  hs = size / 2;
+  int size = (2 * hs + 1);
   int height = pnm_get_height(ims);
   int width = pnm_get_width(ims);
 
@@ -228,7 +227,6 @@ process(int s,
         {
           if (st_image[k * size + l] == 255)
           {
-            // Pourquoi - et pas + ?
             int new_i = i + k - hs;
             int new_j = j + l - hs;
 
