@@ -6,6 +6,36 @@
 
 static const float DISC_TEMPO = 0.25f;
 
+static float
+Laplacien(float* buffer, int width, int height, int i, int j)
+{
+  float top;
+  float left;
+  float right;
+  float bottom;
+
+  if (i == 0)
+    top = (float)buffer[(i + 1) * width + j];
+  else
+    top = (float)buffer[(i - 1) * width + j];
+
+  if (i == height - 1)
+    bottom = (float)buffer[(i - 1) * width + j];
+  else
+    bottom = (float)buffer[(i + 1) * width + j];
+
+  if (j == width - 1)
+    right = (float)buffer[i * width + j - 1];
+  else
+    right = (float)buffer[i * width + j + 1];
+
+  if (j == 0)
+    left = (float)buffer[i * width + j + 1];
+  else
+    left = (float)buffer[i * width + j - 1];
+
+  return top + left + bottom + right - 4.f * buffer[i * width + j];
+}
 
 static void 
 process(int n, char* ims_name, char* imd_name)
@@ -20,45 +50,16 @@ process(int n, char* ims_name, char* imd_name)
   float tmp_img[width * height];
 
   for (int i = 0; i < width * height; ++i)
-  {
     tmp_img[i] = (float)in_img[i];
-    res_img[i] = (float)in_img[i];
-  }
 
   for (int k = 0; k < n; ++k)
   {
     for (int i = 0; i < height; ++i)
       for (int j = 0; j < width; ++j)
       {
-        float top;
-        float left;
-        float right;
-        float bottom;
+        float l = Laplacien(tmp_img, width, height, i, j);
 
-        if (i == 0)
-          top = (float)tmp_img[(i + 1) * width + j];
-        else
-          top = (float)tmp_img[(i - 1) * width + j];
-
-        if (i == height - 1)
-          bottom = (float)tmp_img[(i - 1) * width + j];
-        else
-          bottom = (float)tmp_img[(i + 1) * width + j];
-
-        if (j == width - 1)
-          right = (float)tmp_img[i * width + j - 1];
-        else
-          right = (float)tmp_img[i * width + j + 1];
-
-        if (j == 0)
-          left = (float)tmp_img[i * width + j + 1];
-        else
-          left = (float)tmp_img[i * width + j - 1];
-
-        float Laplacien = top + left + bottom + right - 4.f * tmp_img[i * width + j];
-
-        // FIXME
-        res_img[i * width + j] = DISC_TEMPO * Laplacien;
+        res_img[i * width + j] = tmp_img[i * width + j] + DISC_TEMPO * l;
       }
 
       for (int i = 0 ; i < width * height; ++i)
