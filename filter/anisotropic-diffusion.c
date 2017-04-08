@@ -6,10 +6,6 @@
 
 static const float DISC_TEMPO = 0.25f;
 
-float c0()
-{
-	return 1.f;
-}
 
 float c1(int s, int lambda)
 {
@@ -74,12 +70,12 @@ process(int n, int lambda, int function,  char* ims_name, char* imd_name)
 
       	if (function == 1)
       		norm = norm * c1(j, lambda);
-  		  else if (function == 2)
+  		else if (function == 2)
       		norm = norm * c2(j, lambda);
 
       	float div = tmp_img[i * width + j] - left + tmp_img[i * width + j] - bottom;
 
-      	res_img[i * width + j] = div * DISC_TEMPO;
+      	res_img[i * width + j] = div + DISC_TEMPO;
       }
 
       for (int i = 0 ; i < width * height; ++i)
