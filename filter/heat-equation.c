@@ -62,8 +62,8 @@ process(int n, char* ims_name, char* imd_name)
         res_img[i * width + j] = tmp_img[i * width + j] + DISC_TEMPO * l;
       }
 
-      for (int i = 0 ; i < width * height; ++i)
-        tmp_img[i] = res_img[i];
+    for (int i = 0 ; i < width * height; ++i)
+      tmp_img[i] = res_img[i];
   }
 
   unsigned short res[width * height];

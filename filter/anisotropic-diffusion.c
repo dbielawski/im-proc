@@ -34,10 +34,7 @@ process(int n, int lambda, int function,  char* ims_name, char* imd_name)
   float tmp_img[width * height];
 
   for (int i = 0; i < width * height; ++i)
-  {
     tmp_img[i] = (float)in_img[i];
-    res_img[i] = (float)in_img[i];
-  }
 
   for (int k = 0; k < n; ++k)
   {
@@ -48,7 +45,6 @@ process(int n, int lambda, int function,  char* ims_name, char* imd_name)
         float left;
         float right;
         float bottom;
-        float gradient_right, gradient_left, gradient_top, gradient_bottom;
 
         if (i == 0)
           top = (float)tmp_img[(i + 1) * width + j];
@@ -70,15 +66,15 @@ process(int n, int lambda, int function,  char* ims_name, char* imd_name)
         else
           left = (float)tmp_img[i * width + j - 1];
 
-      	gradient_right = right - tmp_img[i * width + j];
-      	gradient_bottom = bottom - tmp_img[i * width + j];
+      	float gradient_right = right - tmp_img[i * width + j];
+      	float gradient_bottom = bottom - tmp_img[i * width + j];
 
       	float norm = sqrt((gradient_right * gradient_right)
       		+ (gradient_bottom * gradient_bottom));
 
       	if (function == 1)
       		norm = norm * c1(j, lambda);
-  		else if (function == 2)
+  		  else if (function == 2)
       		norm = norm * c2(j, lambda);
 
       	float div = tmp_img[i * width + j] - left + tmp_img[i * width + j] - bottom;
