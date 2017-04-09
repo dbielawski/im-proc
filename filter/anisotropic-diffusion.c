@@ -68,14 +68,16 @@ process(int n, int lambda, int function,  char* ims_name, char* imd_name)
       	float norm = sqrt((gradient_right * gradient_right)
       		+ (gradient_bottom * gradient_bottom));
 
+
       	if (function == 1)
-      		norm = norm * c1(j, lambda);
-  		else if (function == 2)
-      		norm = norm * c2(j, lambda);
+      		norm = c1(norm, lambda);
+  		  else if (function == 2)
+      		norm = c2(norm, lambda);
 
       	float div = tmp_img[i * width + j] - left + tmp_img[i * width + j] - bottom;
+        printf("%f\n", div);
 
-      	res_img[i * width + j] = div + DISC_TEMPO;
+      	res_img[i * width + j] = div + DISC_TEMPO * norm;
       }
 
       for (int i = 0 ; i < width * height; ++i)

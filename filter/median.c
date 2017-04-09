@@ -22,8 +22,8 @@ process(int halfsize, char* ims_name, char* imd_name)
   	unsigned short res_img[width * height];
   	unsigned short window[size * size];
 
-    for (int i = 0; i < height - halfsize; ++i)
-      for (int j = 0; j < width - halfsize; ++j)
+    for (int i = 0; i < height; ++i)
+      for (int j = 0; j < width; ++j)
       {
       	int cpt = 0;
       	for (int k = 0 ; k < size; ++k)

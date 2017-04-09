@@ -9,6 +9,7 @@ OBJ=fft.o
 BIN=heat-equation\
 	anisotropic-diffusion\
 	median\
+	bilateral\
 	nl-means\
 	butterworth
 
