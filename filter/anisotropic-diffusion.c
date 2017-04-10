@@ -65,19 +65,23 @@ process(int n, int lambda, int function,  char* ims_name, char* imd_name)
       	float gradient_right = right - tmp_img[i * width + j];
       	float gradient_bottom = bottom - tmp_img[i * width + j];
 
+        float gradient_left = tmp_img[i * width + j] - left;
+        float gradient_top = tmp_img[i * width + j] - top;
+
       	float norm = sqrt((gradient_right * gradient_right)
       		+ (gradient_bottom * gradient_bottom));
 
-
+        float c;
+        if (function == 0)
+          c = 1.f;
       	if (function == 1)
-      		norm = c1(norm, lambda);
+      		c = c1(norm, lambda);
   		  else if (function == 2)
-      		norm = c2(norm, lambda);
+      		c = c2(norm, lambda);
 
-      	float div = tmp_img[i * width + j] - left + tmp_img[i * width + j] - bottom;
-        printf("%f\n", div);
+      	float div = (tmp_img[i * width + j] - gradient_top + tmp_img[i * width + j] - gradient_left);
 
-      	res_img[i * width + j] = div + DISC_TEMPO * norm;
+      	res_img[i * width + j] = c * div + DISC_TEMPO;
       }
 
       for (int i = 0 ; i < width * height; ++i)
