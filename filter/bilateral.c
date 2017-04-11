@@ -38,16 +38,15 @@ process(int sigma_s, int sigma_g, char* ims_name, char* imd_name)
 	unsigned short* in_img = pnm_get_channel(ims, NULL, 0);
 
 	float res_img[width * height];
-	int half_window_size = 7;
+
+	int half_window_size = ceil(sqrt(- 2.f * sigma_s * sigma_s * log(S)));
 	int window_size = half_window_size * 2;
 
 	float LUT_G_g[255];
 	precomputeColorDist(LUT_G_g, sigma_g);
 
-	// int maxPixelDist = dist(0, 0, width - 1, height - 1);
 	float LUT_G_s[half_window_size];
-
-	// precomputePixelDist(LUT_G_s, maxPixelDist, sigma_s);
+	precomputePixelDist(LUT_G_s, half_window_size, sigma_s);
 
 	for (int i = 0; i < height; ++i)
       for (int j = 0; j < width; ++j)
@@ -66,7 +65,7 @@ process(int sigma_s, int sigma_g, char* ims_name, char* imd_name)
       			if (new_i >= 0 && new_i < width && new_j >= 0 && new_j < height)
       			{
       				unsigned short Iq = in_img[new_i * width + new_j];
-      				float gaussianS = gaussian(dist(i, j, new_i, new_j), sigma_s);
+      				float gaussianS = LUT_G_s[(int)dist(i, j, new_i, new_j)];
       				float gaussianG = LUT_G_g[abs(Ip - Iq)];
       				float gaussS_gaussG = gaussianS * gaussianG;
 
